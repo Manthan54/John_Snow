@@ -1,0 +1,117 @@
+
+import java.util.*;
+
+public class Main {
+
+    static int N;
+
+    // Check whether placing a queen is safe
+    static boolean isSafe(char[][] board, int row, int col) {
+
+        // Check same column
+        for (int i = 0; i < row; i++) {
+            if (board[i][col] == 'Q')
+                return false;
+        }
+
+        // Check upper-left diagonal
+        for (int i = row - 1, j = col - 1;
+             i >= 0 && j >= 0; i--, j--) {
+
+            if (board[i][j] == 'Q')
+                return false;
+        }
+
+        // Check upper-right diagonal
+        for (int i = row - 1, j = col + 1;
+             i >= 0 && j < N; i--, j++) {
+
+            if (board[i][j] == 'Q')
+                return false;
+        }
+
+        return true;
+    }
+
+    // Backtracking function
+    static boolean solveNQueens(char[][] board, int row) {
+
+        // All queens have been placed
+        if (row == N)
+            return true;
+
+        // Skip the row containing the fixed first queen
+        if (row == 0)
+            return solveNQueens(board, row + 1);
+
+        for (int col = 0; col < N; col++) {
+
+            if (isSafe(board, row, col)) {
+
+                board[row][col] = 'Q';
+
+                if (solveNQueens(board, row + 1))
+                    return true;
+
+                // Backtrack
+                board[row][col] = '.';
+            }
+        }
+
+        return false;
+    }
+
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter the value of N: ");
+        N = sc.nextInt();
+
+        if (N <= 0) {
+            System.out.println("Invalid board size.");
+            return;
+        }
+
+        int r, c;
+
+        System.out.print("Enter first queen position (row and column, 1-based): ");
+        r = sc.nextInt();
+        c = sc.nextInt();
+
+        if (r < 1 || r > N || c < 1 || c > N) {
+            System.out.println("Invalid queen position.");
+            return;
+        }
+
+        // Create an empty board
+        char[][] board = new char[N][N];
+
+        for (int i = 0; i < N; i++) {
+            Arrays.fill(board[i], '.');
+        }
+
+        // Place the first queen
+        board[r - 1][c - 1] = 'Q';
+
+        // Solve the problem
+        if (solveNQueens(board, 0)) {
+
+            System.out.println("\nSolution:");
+
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    System.out.print(board[i][j] + " ");
+                }
+                System.out.println();
+            }
+
+        } else {
+            System.out.println(
+                "\nNo solution exists for the given first queen position."
+            );
+        }
+
+        sc.close();
+    }
+}

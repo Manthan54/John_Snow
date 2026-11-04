@@ -1,0 +1,97 @@
+
+import java.util.*;
+
+public class Main {
+
+    // Partition using the first element as pivot
+    static int partitionArray(int[] arr, int low, int high) {
+        int pivot = arr[low];
+
+        int i = low + 1;
+        int j = high;
+
+        while (i <= j) {
+
+            while (i <= high && arr[i] <= pivot)
+                i++;
+
+            while (j > low && arr[j] > pivot)
+                j--;
+
+            if (i < j) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+
+        int temp = arr[low];
+        arr[low] = arr[j];
+        arr[j] = temp;
+
+        return j;
+    }
+
+    // Quick Sort
+    static void quickSort(int[] arr, int low, int high,
+                          boolean randomized) {
+
+        if (low >= high)
+            return;
+
+        // Randomized pivot selection
+        if (randomized) {
+            Random rand = new Random();
+            int randomIndex = low + rand.nextInt(high - low + 1);
+
+            int temp = arr[low];
+            arr[low] = arr[randomIndex];
+            arr[randomIndex] = temp;
+        }
+
+        int pivotIndex = partitionArray(arr, low, high);
+
+        quickSort(arr, low, pivotIndex - 1, randomized);
+        quickSort(arr, pivotIndex + 1, high, randomized);
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of elements: ");
+        int n = sc.nextInt();
+
+        if (n < 0) {
+            System.out.println("Invalid number of elements.");
+            sc.close();
+            return;
+        }
+
+        int[] arr = new int[n];
+
+        System.out.print("Enter array elements: ");
+        for (int i = 0; i < n; i++)
+            arr[i] = sc.nextInt();
+
+        System.out.println("1. Deterministic Quick Sort");
+        System.out.println("2. Randomized Quick Sort");
+        System.out.print("Choose variant: ");
+        int choice = sc.nextInt();
+
+        if (choice != 1 && choice != 2) {
+            System.out.println("Invalid choice.");
+            sc.close();
+            return;
+        }
+
+        boolean randomized = (choice == 2);
+
+        quickSort(arr, 0, n - 1, randomized);
+
+        System.out.print("Sorted array: ");
+        for (int x : arr)
+            System.out.print(x + " ");
+
+        sc.close();
+    }
+}
