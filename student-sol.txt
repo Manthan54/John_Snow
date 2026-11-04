@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract StudentData {
+
+    struct Student {
+        uint rollNo;
+        string name;
+        uint marks;
+    }
+
+    Student[] public students;
+
+    mapping(uint => bool) public exists;
+
+    function addStudent(
+        uint _rollNo,
+        string memory _name,
+        uint _marks
+    ) public {
+
+        require(!exists[_rollNo], "Student already exists");
+
+        students.push(Student(_rollNo, _name, _marks));
+
+        exists[_rollNo] = true;
+    }
+
+    function getStudent(uint index)
+        public
+        view
+        returns (uint, string memory, uint)
+    {
+        require(index < students.length, "Invalid index");
+
+        Student memory s = students[index];
+
+        return (s.rollNo, s.name, s.marks);
+    }
+
+    function updateMarks(uint _rollNo, uint _marks) public {
+
+        require(exists[_rollNo], "Student not found");
+
+        for (uint i = 0; i < students.length; i++) {
+            if (students[i].rollNo == _rollNo) {
+                students[i].marks = _marks;
+                return;
+            }
+        }
+    }
+
+    function getStudentCount() public view returns (uint) {
+        return students.length;
+    }
+}
