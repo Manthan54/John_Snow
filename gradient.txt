@@ -1,0 +1,58 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the function
+def f(x):
+    return (x + 3) ** 2
+
+# Define the derivative
+def derivative(x):
+    return 2 * (x + 3)
+
+# Initial values
+x = 2
+learning_rate = 0.1
+iterations = 30
+
+# Store values for plotting
+x_values = [x]
+y_values = [f(x)]
+
+# Gradient Descent
+for i in range(iterations):
+
+    grad = derivative(x)
+
+    # Update x
+    x = x - learning_rate * grad
+
+    # Store updated values
+    x_values.append(x)
+    y_values.append(f(x))
+
+# Print the result
+print("Minimum x:", x)
+print("Minimum y:", f(x))
+
+# Plot the function
+x_curve = np.linspace(-4.5, 2.5, 200)
+y_curve = f(x_curve)
+
+plt.plot(x_curve, y_curve, label="y = (x + 3)^2")
+
+# Plot Gradient Descent steps
+plt.plot(x_values, y_values, 'ro--', label="Gradient Descent")
+
+# Mark starting and minimum points
+plt.scatter(2, f(2), color="green", label="Starting Point")
+plt.scatter(-3, 0, color="blue", label="Actual Minimum")
+
+# Graph details
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Gradient Descent Optimization")
+plt.legend()
+plt.grid()
+
+plt.show()

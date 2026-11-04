@@ -1,0 +1,152 @@
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import (
+    accuracy_score, confusion_matrix,
+    classification_report, precision_score,
+    recall_score, f1_score
+)
+
+# 1. Read dataset
+df = pd.read_csv("spam.csv", encoding="latin-1")
+
+# 2. Keep only required columns
+df = df.iloc[:, :2]
+df.columns = ["label", "message"]
+
+# 3. Remove missing values and duplicates
+df.dropna(inplace=True)
+df.drop_duplicates(inplace=True)
+
+# 4. Convert labels into numbers
+# ham = 0 (Not Spam), spam = 1 (Spam)
+df["label"] = df["label"].map({
+    "ham": 0,
+    "spam": 1
+})
+
+# 5. Input and output
+X = df["message"]
+y = df["label"]
+
+# 6. Convert text into numerical features using TF-IDF
+tfidf = TfidfVectorizer(stop_words="english", max_features=3000)
+
+X = tfidf.fit_transform(X)
+
+# 7. Split dataset into training and testing
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# 8. KNN Classifier
+knn = KNeighborsClassifier(
+    n_neighbors=5,
+    metric="cosine",
+    algorithm="brute"
+)
+
+knn.fit(X_train, y_train)
+knn_pred = knn.predict(X_test)
+
+# 9. SVM Classifier
+svm = SVC(
+    kernel="linear",
+    C=1.0
+)
+
+svm.fit(X_train, y_train)
+svm_pred = svm.predict(X_test)
+
+# 10. Evaluate KNN
+print("\n----- KNN Results -----")
+
+print("Accuracy:", accuracy_score(y_test, knn_pred))
+print("Precision:", precision_score(y_test, knn_pred))
+print("Recall:", recall_score(y_test, knn_pred))
+print("F1 Score:", f1_score(y_test, knn_pred))
+
+print("\nKNN Confusion Matrix:")
+print(confusion_matrix(y_test, knn_pred))
+
+# 11. Evaluate SVM
+print("\n----- SVM Results -----")
+
+print("Accuracy:", accuracy_score(y_test, svm_pred))
+print("Precision:", precision_score(y_test, svm_pred))
+print("Recall:", recall_score(y_test, svm_pred))
+print("F1 Score:", f1_score(y_test, svm_pred))
+
+print("\nSVM Confusion Matrix:")
+print(confusion_matrix(y_test, svm_pred))
+
+# 12. Classification Reports
+print("\nKNN Classification Report:")
+print(classification_report(y_test, knn_pred))
+
+print("\nSVM Classification Report:")
+print(classification_report(y_test, svm_pred))
+
+# 13. Compare both models
+results = pd.DataFrame({
+    "Model": ["KNN", "SVM"],
+    "Accuracy": [
+        accuracy_score(y_test, knn_pred),
+        accuracy_score(y_test, svm_pred)
+    ],
+    "Precision": [
+        precision_score(y_test, knn_pred),
+        precision_score(y_test, svm_pred)
+    ],
+    "Recall": [
+        recall_score(y_test, knn_pred),
+        recall_score(y_test, svm_pred)
+    ],
+    "F1 Score": [
+        f1_score(y_test, knn_pred),
+        f1_score(y_test, svm_pred)
+    ]
+})
+
+print("\n----- Model Comparison -----")
+print(results)
+
+# 14. Plot confusion matrices
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+
+sns.heatmap(
+    confusion_matrix(y_test, knn_pred),
+    annot=True, fmt="d", cmap="Blues", ax=axes[0]
+)
+axes[0].set_title("KNN Confusion Matrix")
+axes[0].set_xlabel("Predicted")
+axes[0].set_ylabel("Actual")
+
+sns.heatmap(
+    confusion_matrix(y_test, svm_pred),
+    annot=True, fmt="d", cmap="Greens", ax=axes[1]
+)
+axes[1].set_title("SVM Confusion Matrix")
+axes[1].set_xlabel("Predicted")
+axes[1].set_ylabel("Actual")
+
+plt.tight_layout()
+plt.show()
+
+# 15. Compare accuracy
+results.set_index("Model")["Accuracy"].plot(
+    kind="bar", color=["skyblue", "lightgreen"]
+)
+
+plt.title("KNN vs SVM Accuracy Comparison")
+plt.ylabel("Accuracy")
+plt.ylim(0, 1)
+plt.xticks(rotation=0)
+plt.show()

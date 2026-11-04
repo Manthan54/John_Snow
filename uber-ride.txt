@@ -1,0 +1,152 @@
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_squared_error
+
+# 1. Read dataset
+df = pd.read_csv("uber.csv")
+
+# 2. Understand the dataset
+print("First 5 records:")
+print(df.head())
+
+print("\nDataset Information:")
+print(df.info())
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# 3. Remove unnecessary columns
+df.drop(columns=["Unnamed: 0", "key"], errors="ignore", inplace=True)
+
+# 4. Remove duplicate records
+df.drop_duplicates(inplace=True)
+
+# 5. Handle missing values
+df.dropna(inplace=True)
+
+# Keep only numeric columns
+df = df.select_dtypes(include=np.number)
+
+target = "fare_amount"
+
+# 6. Remove invalid values
+df = df[df[target] > 0]
+
+# Remove invalid passenger counts
+if "passenger_count" in df.columns:
+    df = df[df["passenger_count"] > 0]
+
+# 7. Identify outliers using Boxplot
+plt.figure(figsize=(10, 4))
+sns.boxplot(x=df[target])
+plt.title("Boxplot Before Removing Outliers")
+plt.xlabel("Fare Amount")
+plt.show()
+
+# 8. Remove outliers using IQR method
+q1 = df[target].quantile(0.25)
+q3 = df[target].quantile(0.75)
+
+iqr = q3 - q1
+
+lower_limit = q1 - 1.5 * iqr
+upper_limit = q3 + 1.5 * iqr
+
+print("\nLower Limit:", lower_limit)
+print("Upper Limit:", upper_limit)
+
+# Count outliers
+outliers = df[(df[target] < lower_limit) |
+              (df[target] > upper_limit)]
+
+print("Number of Outliers:", len(outliers))
+
+# Remove outliers
+df = df[(df[target] >= lower_limit) &
+        (df[target] <= upper_limit)]
+
+print("Dataset Shape After Removing Outliers:", df.shape)
+
+# 9. Verify outlier removal using Boxplot
+plt.figure(figsize=(10, 4))
+sns.boxplot(x=df[target])
+plt.title("Boxplot After Removing Outliers")
+plt.xlabel("Fare Amount")
+plt.show()
+
+# 10. Correlation Analysis
+plt.figure(figsize=(10, 6))
+sns.heatmap(df.corr(), annot=True, cmap="coolwarm", fmt=".2f")
+plt.title("Correlation Heatmap")
+plt.show()
+
+# 11. Separate input and output features
+X = df.drop(target, axis=1)
+y = df[target]
+
+# 12. Split dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+print("\nTraining Data:", X_train.shape)
+print("Testing Data:", X_test.shape)
+
+# 13. Linear Regression
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+
+lr_pred = lr.predict(X_test)
+
+# 14. Random Forest Regression
+rf = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42
+)
+
+rf.fit(X_train, y_train)
+
+rf_pred = rf.predict(X_test)
+
+# 15. Model Evaluation
+lr_r2 = r2_score(y_test, lr_pred)
+lr_rmse = np.sqrt(mean_squared_error(y_test, lr_pred))
+
+rf_r2 = r2_score(y_test, rf_pred)
+rf_rmse = np.sqrt(mean_squared_error(y_test, rf_pred))
+
+print("\n----- Linear Regression -----")
+print("R2 Score:", lr_r2)
+print("RMSE:", lr_rmse)
+
+print("\n----- Random Forest Regression -----")
+print("R2 Score:", rf_r2)
+print("RMSE:", rf_rmse)
+
+# 16. Compare Both Models
+results = pd.DataFrame({
+    "Model": ["Linear Regression", "Random Forest"],
+    "R2 Score": [lr_r2, rf_r2],
+    "RMSE": [lr_rmse, rf_rmse]
+})
+
+print("\n----- Model Comparison -----")
+print(results)
+
+# 17. Visualize Model Comparison
+results.set_index("Model")[["R2 Score", "RMSE"]].plot(
+    kind="bar", figsize=(9, 5)
+)
+
+plt.title("Linear Regression vs Random Forest")
+plt.ylabel("Score")
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.show()
